@@ -1,0 +1,42 @@
+export GITHUB_PROJECT=opensky-config
+export GITHUB_OWNER=jluetolf
+
+export NETWORK_NAME=eth0
+export USERNAME=ubuntu
+export PASSWORD=ubuntu
+
+# Prepare Environment Variables 
+export PUBLIC_IP=$(curl ipinfo.io/ip)
+export DOCKER_HOST_IP=$(ip addr show ${NETWORK_NAME} | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+
+# allow login by password
+sudo sed -i "s/.*PasswordAuthentication.*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+echo "${USERNAME}:${PASSWORD}"|chpasswd
+sudo service sshd restart
+
+# add alias "dataplatform" to /etc/hosts
+echo "$DOCKER_HOST_IP     dataplatform" | sudo tee -a /etc/hosts
+
+# Install Docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable edge"
+apt-get install -y docker-ce
+sudo usermod -aG docker $USERNAME
+
+
+# Get the docker-compose.yml file from github
+cd /home/${USERNAME} 
+git clone https://github.com/${GITHUB_OWNER}/${GITHUB_PROJECT}
+chown -R ${USERNAME}:${PASSWORD} ${GITHUB_PROJECT}
+cd /home/${USERNAME}/${GITHUB_PROJECT}/docker
+
+# set max_map_count to 262144 for the opensearch cluster
+sudo su
+echo vm.max_map_count=262144 >> /etc/sysctl.conf
+sysctl -p
+exit
+
+sudo apt install -y docker-compose
+
+docker login -u jluetolf -p <password>
+docker-compose pull && docker-compose up -d
