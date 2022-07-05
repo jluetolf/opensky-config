@@ -7,199 +7,181 @@ version: '3.5'
 networks:
   default:
     name: demo-platform
-# enforce some dependencies
 # backward compatiblity to platform < 1.14.0
 # Enable PostgreSQL or MySQL for MLflow server
 services:
-  #  ================================== Zookeeper ========================================== #
-  zookeeper-1:
-    image: confluentinc/cp-zookeeper:7.1.0
-    container_name: zookeeper-1
-    hostname: zookeeper-1
+  #  ================================== Apache Spark 2.x ========================================== #
+  spark-master:
+    image: trivadis/apache-spark-master:3.1.3-hadoop3.2
+    container_name: spark-master
+    hostname: spark-master
     labels:
-      com.platys.name: zookeeper
+      com.platys.name: spark
+      com.platys.webui.title: Spark UI
+      com.platys.webui.url: http://${PUBLIC_IP}:8080
     ports:
-      - 2181:2181
+      - 6066:6066
+      - 7077:7077
+      - 8080:8080
+      - 4040-4044:4040-4044
+    env_file:
+      - ./conf/hadoop.env
     environment:
-      ZOOKEEPER_SERVER_ID: 1
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_INIT_LIMIT: 5
-      ZOOKEEPER_SYNC_LIMIT: 2
+      CORE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      CORE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      HIVE_SITE_CONF_fs_s3a_access_key: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_secret_key: ${PLATYS_AWS_SECRET_ACCESS_KEY:?PLATYS_AWS_SECRET_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
+      SPARK_PUBLIC_DNS: ${PUBLIC_IP}
+      INIT_DAEMON_STEP: setup_spark
+      MASTER: spark://spark-master:7077
+      SPARK_DEFAULTS_CONF_spark_jars_repositories:
+      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_excludes:
+      SPARK_DEFAULTS_CONF_spark_jars:
+      SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
+      SPARK_DEFAULTS_CONF_spark_sql_catalogImplementation: in-memory
+      CORE_CONF_fs_defaultFS: s3a://admin-bucket
+      SPARK_DEFAULTS_CONF_spark_sql_warehouse_dir: s3a://admin-bucket/hive/warehouse
+      SPARK_DEFAULTS_CONF_spark_yarn_dist_files: /spark/conf/hive-site.xml
+      SPARK_DEFAULTS_CONF_spark_driver_extraJavaOptions:
+      SPARK_DEFAULTS_CONF_spark_executor_extraJavaOptions:
     volumes:
       - ./data-transfer:/data-transfer
+      - ./plugins/spark/jars:/extra-jars
+      - ./container-volume/spark/logs/:/var/log/spark/logs
     restart: unless-stopped
-#  ================================== Kafka ========================================== #
-  kafka-1:
-    image: confluentinc/cp-kafka:7.1.0
-    container_name: kafka-1
-    hostname: kafka-1
+  spark-worker-1:
+    image: trivadis/apache-spark-worker:3.1.3-hadoop3.2
+    container_name: spark-worker-1
+    hostname: spark-worker-1
     labels:
-      com.platys.name: kafka
+      com.platys.name: spark
     depends_on:
-      - zookeeper-1
+      - spark-master
     ports:
-      - 9092:9092
-      - 19092:19092
-      - 29092:29092
-      - 39092:39092
-      - 9992:9992
+      - 28111:28111
+    env_file:
+      - ./conf/hadoop.env
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_BROKER_RACK: rack1
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT,LISTENER_DOCKERHOST:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: LISTENER_INTERNAL://kafka-1:19092,LISTENER_LOCAL://kafka-1:39092,LISTENER_DOCKERHOST://kafka-1:29092,LISTENER_EXTERNAL://kafka-1:9092
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka-1:19092,LISTENER_LOCAL://localhost:39092,LISTENER_DOCKERHOST://${DOCKER_HOST_IP:-127.0.0.1}:29092,LISTENER_EXTERNAL://${PUBLIC_IP:-127.0.0.1}:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_MESSAGE_TIMESTAMP_TYPE: CreateTime
-      KAFKA_MIN_INSYNC_REPLICAS: 1
-      KAFKA_DELETE_TOPIC_ENABLE: 'True'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'False'
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-      KAFKA_JMX_PORT: 9992
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=9992
-      KAFKA_JMX_HOSTNAME: ${PUBLIC_IP:-127.0.0.1}
-      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
-      KAFKA_TOOLS_LOG4J_LOGLEVEL: INFO
+      SPARK_MASTER: spark://spark-master:7077
+      SPARK_WORKER_WEBUI_PORT: '28111'
+      SPARK_WORKER_OPTS: -Dspark.worker.cleanup.enabled=true
+      SPARK_PUBLIC_DNS: ${PUBLIC_IP}
+      CORE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      CORE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      HIVE_SITE_CONF_fs_s3a_access_key: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_secret_key: ${PLATYS_AWS_SECRET_ACCESS_KEY:?PLATYS_AWS_SECRET_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
+      SPARK_DEFAULTS_CONF_spark_jars_repositories:
+      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_excludes:
+      SPARK_DEFAULTS_CONF_spark_jars:
+      SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
+      SPARK_DEFAULTS_CONF_spark_sql_catalogImplementation: in-memory
+      CORE_CONF_fs_defaultFS: s3a://admin-bucket
+      SPARK_DEFAULTS_CONF_spark_sql_warehouse_dir: s3a://admin-bucket/hive/warehouse
+      SPARK_DEFAULTS_CONF_spark_yarn_dist_files: /spark/conf/hive-site.xml
+      SPARK_DEFAULTS_CONF_spark_driver_extraJavaOptions:
+      SPARK_DEFAULTS_CONF_spark_executor_extraJavaOptions:
     volumes:
       - ./data-transfer:/data-transfer
+      - ./plugins/spark/jars:/extra-jars
+      - ./container-volume/spark/logs/:/var/log/spark/logs
     restart: unless-stopped
-  kafka-2:
-    image: confluentinc/cp-kafka:7.1.0
-    container_name: kafka-2
-    hostname: kafka-2
+  spark-worker-2:
+    image: trivadis/apache-spark-worker:3.1.3-hadoop3.2
+    container_name: spark-worker-2
+    hostname: spark-worker-2
     labels:
-      com.platys.name: kafka
+      com.platys.name: spark
     depends_on:
-      - zookeeper-1
+      - spark-master
     ports:
-      - 9093:9093
-      - 19093:19093
-      - 29093:29093
-      - 39093:39093
-      - 9993:9993
+      - 28112:28112
+    env_file:
+      - ./conf/hadoop.env
     environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_BROKER_RACK: rack1
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT,LISTENER_DOCKERHOST:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: LISTENER_INTERNAL://kafka-2:19093,LISTENER_LOCAL://kafka-2:39093,LISTENER_DOCKERHOST://kafka-2:29093,LISTENER_EXTERNAL://kafka-2:9093
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka-2:19093,LISTENER_LOCAL://localhost:39093,LISTENER_DOCKERHOST://${DOCKER_HOST_IP:-127.0.0.1}:29093,LISTENER_EXTERNAL://${PUBLIC_IP:-127.0.0.1}:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_MESSAGE_TIMESTAMP_TYPE: CreateTime
-      KAFKA_MIN_INSYNC_REPLICAS: 1
-      KAFKA_DELETE_TOPIC_ENABLE: 'True'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'False'
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-      KAFKA_JMX_PORT: 9993
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=9993
-      KAFKA_JMX_HOSTNAME: ${PUBLIC_IP:-127.0.0.1}
-      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
-      KAFKA_TOOLS_LOG4J_LOGLEVEL: INFO
+      SPARK_MASTER: spark://spark-master:7077
+      SPARK_WORKER_WEBUI_PORT: '28112'
+      SPARK_WORKER_OPTS: -Dspark.worker.cleanup.enabled=true
+      SPARK_PUBLIC_DNS: ${PUBLIC_IP}
+      CORE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      CORE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      HIVE_SITE_CONF_fs_s3a_access_key: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_secret_key: ${PLATYS_AWS_SECRET_ACCESS_KEY:?PLATYS_AWS_SECRET_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
+      SPARK_DEFAULTS_CONF_spark_jars_repositories:
+      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_excludes:
+      SPARK_DEFAULTS_CONF_spark_jars:
+      SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
+      SPARK_DEFAULTS_CONF_spark_sql_catalogImplementation: in-memory
+      CORE_CONF_fs_defaultFS: s3a://admin-bucket
+      SPARK_DEFAULTS_CONF_spark_sql_warehouse_dir: s3a://admin-bucket/hive/warehouse
+      SPARK_DEFAULTS_CONF_spark_yarn_dist_files: /spark/conf/hive-site.xml
+      SPARK_DEFAULTS_CONF_spark_driver_extraJavaOptions:
+      SPARK_DEFAULTS_CONF_spark_executor_extraJavaOptions:
     volumes:
       - ./data-transfer:/data-transfer
+      - ./plugins/spark/jars:/extra-jars
+      - ./container-volume/spark/logs/:/var/log/spark/logs
     restart: unless-stopped
-  kafka-3:
-    image: confluentinc/cp-kafka:7.1.0
-    container_name: kafka-3
-    hostname: kafka-3
+  #  ================================== NiFi ========================================== #
+  nifi-1:
+    image: apache/nifi:1.16.3
+    container_name: nifi-1
+    hostname: nifi-1
     labels:
-      com.platys.name: kafka
-    depends_on:
-      - zookeeper-1
+      com.platys.name: nifi
+      com.platys.webui.title: Apache NiFi UI Node 18080
+      com.platys.webui.url: https://${PUBLIC_IP}:18080/nifi
     ports:
-      - 9094:9094
-      - 19094:19094
-      - 29094:29094
-      - 39094:39094
-      - 9994:9994
+      # HTTP
+      - 18080:18080
+      # Remote Input Socket
+      - 10005:10005/tcp
     environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_BROKER_RACK: rack1
-      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_LOCAL:PLAINTEXT,LISTENER_DOCKERHOST:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: LISTENER_INTERNAL://kafka-3:19094,LISTENER_LOCAL://kafka-3:39094,LISTENER_DOCKERHOST://kafka-3:29094,LISTENER_EXTERNAL://kafka-3:9094
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka-3:19094,LISTENER_LOCAL://localhost:39094,LISTENER_DOCKERHOST://${DOCKER_HOST_IP:-127.0.0.1}:29094,LISTENER_EXTERNAL://${PUBLIC_IP:-127.0.0.1}:9094
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
-      KAFKA_MESSAGE_TIMESTAMP_TYPE: CreateTime
-      KAFKA_MIN_INSYNC_REPLICAS: 1
-      KAFKA_DELETE_TOPIC_ENABLE: 'True'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'False'
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
-      KAFKA_JMX_PORT: 9994
-      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.rmi.port=9994
-      KAFKA_JMX_HOSTNAME: ${PUBLIC_IP:-127.0.0.1}
-      KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
-      KAFKA_TOOLS_LOG4J_LOGLEVEL: INFO
+      NIFI_WEB_HTTPS_PORT: '18080'
+      NIFI_WEB_HTTPS_HOST: nifi-1
+      NIFI_WEB_PROXY_HOST: ${PUBLIC_IP}:18080,${DOCKER_HOST_IP}18080
+      AUTH: tls
+      KEYSTORE_PATH: /opt/certs/keystore.jks
+      KEYSTORE_TYPE: JKS
+      KEYSTORE_PASSWORD: PTz7kFl1rzX4wUtcDlurwV6gjm7vID9Ibgbe71N355w
+      TRUSTSTORE_PATH: /opt/certs/truststore.jks
+      TRUSTSTORE_TYPE: JKS
+      TRUSTSTORE_PASSWORD: h8I20cJyr50rFwzJRZkBcodLM8ifnDqQK2kORds8TLk
+      NIFI_SECURITY_USER_AUTHORIZER: single-user-authorizer
+      NIFI_SECURITY_USER_LOGIN_IDENTITY_PROVIDER: single-user-provider
+      NIFI_REMOTE_INPUT_SOCKET_PORT: '10005'
+      NIFI_REMOTE_INPUT_HOST: nifi-1
+      NIFI_SENSITIVE_PROPS_KEY: 12345678901234567890A
+      SINGLE_USER_CREDENTIALS_USERNAME: nifi
+      SINGLE_USER_CREDENTIALS_PASSWORD: 1234567890ACD
     volumes:
       - ./data-transfer:/data-transfer
-    restart: unless-stopped
-  #  ================================== Confluent Schema Registry ========================================== #
-  schema-registry-1:
-    image: confluentinc/cp-schema-registry:7.1.0
-    hostname: schema-registry-1
-    container_name: schema-registry-1
-    labels:
-      com.platys.name: schema-registry
-      com.platys.restapi.title: Schema Registry REST API
-      com.platys.restapi.url: http://${PUBLIC_IP}:8081
-    ports:
-      - 8081:8081
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry-1
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka-1:19092,kafka-2:19093,kafka-3:19094
-      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: PLAINTEXT
-      SCHEMA_REGISTRY_GROUP_ID: schema-registry
-      SCHEMA_REGISTRY_LEADER_ELIGIBILITY: 'True'
-      SCHEMA_REGISTRY_MODE_MUTABILITY: 'True'
-      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
-      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 1
-      SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN: '*'
-      SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS: GET,POST,PUT,OPTIONS
-      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: info
-      SCHEMA_REGISTRY_DEBUG: 'False'
-    volumes:
-      - ./data-transfer:/data-transfer
-      - ./plugins/opentelemetry/agents:/otel
-    restart: unless-stopped
-  #  ================================== Apache Kafka HQ (AKHQ) ========================================== #
-  akhq:
-    image: tchiotludo/akhq:latest
-    container_name: akhq
-    hostname: akhq
-    labels:
-      com.platys.name: akhq
-      com.platys.webui.title: Apache Kafka AQ UI
-      com.platys.webui.url: http://${PUBLIC_IP}:28107
-    ports:
-      - 28107:8080
-    environment:
-      AKHQ_CONFIGURATION: |
-        akhq:
-          connections:
-            docker-kafka-server:
-              properties:
-                bootstrap.servers: 'kafka-1:19092,kafka-2:19093,kafka-3:19094'
-              schema-registry:
-                url: "http://schema-registry-1:8081"
-                type: "confluent"
-    volumes:
-      - ./data-transfer:/data-transfer
+      - ./conf/nifi/keystore.jks:/opt/certs/keystore.jks
+      - ./conf/nifi/truststore.jks:/opt/certs/truststore.jks
     restart: unless-stopped
   #  ================================== Zeppelin ========================================== #
   zeppelin:
-    image: trivadis/apache-zeppelin:0.10.0-spark2.4.8-hadoop2.8
+    image: trivadis/apache-zeppelin:0.10.0-spark3.1.3-hadoop3.2
     container_name: zeppelin
     hostname: zeppelin
     labels:
@@ -214,14 +196,31 @@ services:
     env_file:
       - ./conf/hadoop.env
     environment:
+      CORE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      CORE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_endpoint: s3.amazonaws.com
+      HIVE_SITE_CONF_fs_s3a_access_key: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_secret_key: ${PLATYS_AWS_SECRET_ACCESS_KEY:?PLATYS_AWS_SECRET_ACCESS_KEY must be set either in .env or as an environment variable}
+      HIVE_SITE_CONF_fs_s3a_path_style_access: 'False'
+      HIVE_SITE_CONF_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
+      SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
+      SPARK_HADOOP_FS_S3A_ACCESS_KEY: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      SPARK_HADOOP_FS_S3A_SECRET_KEY: ${PLATYS_AWS_SECRET_ACCESS_KEY:?PLATYS_AWS_SECRET_ACCESS_KEY must be set either in .env or as an environment variable}
+      # for awscli & s3cmd
+      AWS_ACCESS_KEY_ID: ${PLATYS_AWS_ACCESS_KEY:?PLATYS_AWS_ACCESS_KEY must be set either in .env or as an environment variable}
+      AWS_SECRET_ACCESS_KEY: ${PLATYS_AWS_SECRET_ACCESS_KEY:-bKhWxVF3kQoLY9kFmt91l+tDrEoZjqnWXzY9Eza}
+      AWS_ENDPOINT: s3.amazonaws.com
+      AWS_DEFAULT_REGION: eu-central-1
       SPARK_DEFAULTS_CONF_spark_jars_repositories:
       SPARK_DEFAULTS_CONF_spark_jars_packages:
       SPARK_DEFAULTS_CONF_spark_jars_excludes:
       SPARK_DEFAULTS_CONF_spark_jars:
       SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
       SPARK_DEFAULTS_CONF_spark_sql_catalogImplementation: in-memory
-      CORE_CONF_fs_defaultFS: file:///tmp
-      SPARK_DEFAULTS_CONF_spark_sql_warehouse_dir: file:///hive/warehouse
+      CORE_CONF_fs_defaultFS: s3a://admin-bucket
+      SPARK_DEFAULTS_CONF_spark_sql_warehouse_dir: s3a://admin-bucket/hive/warehouse
       SPARK_DEFAULTS_CONF_spark_yarn_dist_files: /spark/conf/hive-site.xml
       SPARK_DEFAULTS_CONF_spark_driver_extraJavaOptions:
       SPARK_DEFAULTS_CONF_spark_executor_extraJavaOptions:
@@ -246,56 +245,152 @@ services:
       - ./container-volume/spark/logs/:/var/log/spark/logs
       - ./conf/s3cfg:/root/.s3cfg.template
     restart: unless-stopped
-  #  ================================== Cassandra ========================================== #
-  cassandra-1:
-    image: cassandra:3.11
-    container_name: cassandra-1
-    hostname: cassandra-1
+  #  ================================== Elasticsearch ========================================== #
+  elasticsearch-1:
+    image: elasticsearch:7.17.0
+    hostname: elasticsearch-1
+    container_name: elasticsearch-1
     labels:
-      com.platys.name: cassandra
+      com.platys.name: elasticsearch
+      com.platys.restapi.title: Elasticsearch REST API
+      com.platys.restapi.url: http://${PUBLIC_IP}:9200
+      com.platys.manual.step.msgs: sudo sysctl -w vm.max_map_count=262144
     ports:
-      - 29042:9042
-      - 7199:7199
-      - 9160:9160
+      - 9200:9200
+      - 9300:9300
     environment:
-      - CASSANDRA_SEEDS=cassandra-1
-      - CASSANDRA_CLUSTER_NAME="Test Cluster"
-      - CASSANDRA_DC=se1
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - LOCAL_JMX=no
-    volumes:
-      - ./data-transfer:/data-transfer
-      - ./conf/cassandra/jmxremote.access:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/management/jmxremote.access
-      - ./conf/cassandra/jmxremote.password:/etc/cassandra/jmxremote.password
-    restart: unless-stopped
-  cassandra-web:
-    image: trivadis/cassandra-web
-    container_name: cassandra-web
-    hostname: cassandra-web
-    labels:
-      com.platys.name: cassandra
-      com.platys.webui.title: Cassandra Web UI
-      com.platys.webui.url: http://${PUBLIC_IP}:28120
-    ports:
-      - 28120:3000
-    environment:
-      - CASSANDRA_HOSTNAME=cassandra-1
-      - CASSANDRA_PORT=9042
-      - CASSANDRA_USERNAME=cassandra
-      - CASSANDRA_PASSWORD=cassandra
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      xpack.monitoring.enabled: 'false'
+      http.cors.enabled: 'true'
+      http.cors.allow-origin: http://${DOCKER_HOST_IP}:28275,http://${PUBLIC_IP}:28275,http://dejavu:1358,http://dataplatform:28125,http://dataplatform:28125,http://${PUBLIC_IP}:28125,http://${DOCKER_HOST_IP}:28125,http://127.0.0.1:1358
+      http.cors.allow-headers: X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+      http.cors.allow-credentials: 'true'
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
     volumes:
       - ./data-transfer:/data-transfer
     restart: unless-stopped
-  dejavu:
-    image: appbaseio/dejavu:latest
-    container_name: dejavu
-    hostname: dejuvu
+  #  ================================== ElasticVue ========================================== #
+  elasticvue:
+    image: cars10/elasticvue:latest
+    container_name: elasticvue
+    hostname: elasticvue
     labels:
-      com.platys.name: dejavu
-      com.platys.webui.title: Elasticsearch Dejavu UI
-      com.platys.webui.url: http://${PUBLIC_IP}:28125
+      com.platys.name: elasticvue
+      com.platys.webui.title: ElasticVue UI
+      com.platys.webui.url: http://${PUBLIC_IP}:28275
     ports:
-      - 28125:1358
+      - 28275:8080
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+  #  ================================== OpenSearch ========================================== #
+  opensearch-1:
+    image: opensearchproject/opensearch:2
+    hostname: opensearch-1
+    container_name: opensearch-1
+    labels:
+      com.platys.name: opensearch
+      com.platys.restapi.title: OpenSearch REST API
+      com.platys.restapi.url: http://${PUBLIC_IP}:29200
+      com.platys.manual.step.msgs: sudo sysctl -w vm.max_map_count=262144
+    ports:
+      - 29200:9200
+      - 29600:9600
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-1
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true     # disables execution of install_demo_configuration.sh bundled with security plugin, which installs demo certificates and security configurations to OpenSearch
+      - DISABLE_SECURITY_PLUGIN=true     #  disables security plugin entirely in OpenSearch by setting plugins.security.disabled: true in opensearch.yml
+      - bootstrap.memory_lock=true   # along with the memlock settings below, disables swapping
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m   # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - http.cors.enabled=true
+      - http.cors.allow-origin="http://${DOCKER_HOST_IP}:28275,http://${PUBLIC_IP}:28275,http://dejavu:1358,http://dataplatform:28125,http://dataplatform:28125,http://${PUBLIC_IP}:28125,http://${DOCKER_HOST_IP}:28125,http://127.0.0.1:1358"
+      - http.cors.allow-headers="X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+  #  ================================== OpenSearch Dashboards ========================================== #
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2
+    hostname: opensearch-dashboards
+    container_name: opensearch-dashboards
+    labels:
+      com.platys.name: opensearch-dashboards
+      com.platys.webui.title: OpenSearch Dashboards
+      com.platys.webui.url: http://${PUBLIC_IP}:5603
+    ports:
+      - 5603:5601
+    expose:
+      - '5601'
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch-1:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true     # disables security dashboards plugin in OpenSearch Dashboards
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+  #  ================================== PostgreSQL ========================================== #
+  postgresql:
+    image: postgres:13
+    container_name: postgresql
+    hostname: postgresql
+    labels:
+      com.platys.name: postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=abc123!
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_MULTIPLE_DATABASES=demodb
+      - POSTGRES_MULTIPLE_USERS=demo
+      - POSTGRES_MULTIPLE_PASSWORDS=abc123!
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - DB_SCHEMA=demo
+    volumes:
+      - ./data-transfer:/data-transfer
+      - ./init/postgresql:/docker-entrypoint-initdb.d/
+    restart: unless-stopped
+  #  ================================== NocoDB ========================================== #
+  nocodb:
+    image: nocodb/nocodb:latest
+    container_name: nocodb
+    hostname: nocodb
+    labels:
+      com.platys.name: nocodb
+      com.platys.webui.title: NocoDB UI
+      com.platys.webui.url: http://${PUBLIC_IP}:28276
+    ports:
+      - 28276:8080
+    environment:
+      NC_DB: pg://postgresql:5432?u=postgres&p=abc123!&d=postgres
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+  #  ================================== Wetty ========================================== #
+  wetty:
+    image: svenihoney/wetty:latest
+    container_name: wetty
+    hostname: wetty
+    labels:
+      com.platys.name: wetty
+      com.platys.webui.title: WeTTY UI
+      com.platys.webui.url: http://${PUBLIC_IP}:3001
+    ports:
+      - 3001:3000
+    environment:
+      - REMOTE_SSH_SERVER=${DOCKER_HOST_IP}
+      - REMOTE_SSH_PORT=22
+      - REMOTE_SSH_USER=
+      - WETTY_PORT=3000
     volumes:
       - ./data-transfer:/data-transfer
     restart: unless-stopped
