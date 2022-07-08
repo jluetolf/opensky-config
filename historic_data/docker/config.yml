@@ -1,0 +1,253 @@
+ # Default values for the generator
+ # this file can be used as a template for a custom configuration
+ # or to know about the different variables available for the generator
+      platys:
+        platform-name: 'nosql-platform'
+        platform-stack: 'trivadis/platys-modern-data-platform'
+        platform-stack-version: '1.15.0-preview'
+        structure: 'flat'
+
+      # ========================================================================
+      # Global configuration, valid for all or a group of services
+      # ========================================================================
+      # Timezone, use a Linux string such as Europe/Zurich or America/New_York
+      use_timezone: ''
+      # the name of the repository to use for private images, which are not on docker hub (currently only Oracle images)
+      private_docker_repository_name: 'trivadis'
+      # the UID to use when using the "user" property in a service to override the user inside the container
+      uid: '1000'
+      data_centers: 'dc1,dc2'
+      data_center_to_use: 0
+      copy_cookbook_data_folder: false
+
+      #zookeeper
+      ZOOKEEPER_enable: false
+      ZOOKEEPER_volume_map_data: false
+      ZOOKEEPER_nodes: 1            # either 1 or 3
+
+      #kafka
+      KAFKA_enable: false
+      # one of enterprise, community
+      KAFKA_edition: 'community'
+      KAFKA_volume_map_data: false
+      KAFKA_broker_nodes: 3
+      KAFKA_delete_topic_enable: false
+      KAFKA_auto_create_topics_enable: false
+
+      #kafka schema registry
+      KAFKA_SCHEMA_REGISTRY_enable: false
+      KAFKA_SCHEMA_REGISTRY_nodes: 1
+      KAFKA_SCHEMA_REGISTRY_use_zookeeper_election: false
+      KAFKA_SCHEMA_REGISTRY_replication_factor: 1
+
+      #kafka connect
+      KAFKA_CONNECT_enable: false
+      KAFKA_CONNECT_nodes: 2
+
+      #misc kafka 'addons'
+      KAFKA_KSQLDB_enable: false
+      KAFKA_KSQL_edition: 'oss'
+      KAFKA_KSQLDB_nodes: 1
+
+      # Kafka Confluent Control Center
+      KAFKA_CCC_enable: false
+
+      KAFKA_RESTPROXY_enable: false
+      KAFKA_MQTTPROXY_enable: false
+
+      KAFKA_SCHEMA_REGISTRY_UI_enable: false
+      KAFKA_CONNECT_UI_enable: false
+
+      KAFKA_MANAGER_enable: false
+      KAFKA_KAFDROP_enable: false
+      KAFKA_KADMIN_enable: false
+      KAFKA_KAFKAHQ_enable: false
+      KAFKA_BURROW_enable: false
+
+      #hadoop
+      HADOOP_enable: false
+      HADOOP_datanodes: 2
+
+      #spark
+      SPARK_enable: false
+      SPARK_base_version: 3.1
+      SPARK_workers: 2
+
+      # misc spark 'addons'
+      SPARK_HISTORY_enable: false
+      SPARK_THRIFT_enable: false
+
+      # Apache Livy
+      LIVY_enable: false
+
+      # Apache Hive
+      HIVE_enable: false
+
+      # Apache Atlas
+      ATLAS_enable: false
+      ATLAS_provision_atlas_sample_data: false
+      ATLAS_provision_amundsen_sample_data: false
+      ATLAS_install_hive_hook: false
+
+      #amundsen
+      AMUNDSEN_enable: false
+      # one of 'amundsen-metastore' or 'atlas-metastore'
+      AMUNDSEN_edition: 'amundsen-metastore'
+
+      #hue
+      HUE_enable: false
+
+      #streamsets and stremsets edge
+      STREAMSETS_enable: false
+      STREAMSETS_volume_map_data: false
+      STREAMSETS_TRANSFORMER_enable: false
+      STREAMSETS_TRANSFORMER_volume_map_data: false
+      STREAMSETS_EDGE_enable: false
+      STREAMSETS_EDGE_volume_map_data: false
+
+      #nifi
+      NIFI_enable: false
+
+      #nodered
+      NODERED_enable: false
+      NODERED_volume_map_data: false
+
+      #zeppelin
+      ZEPPELIN_enable: true
+      ZEPPELIN_volume_map_data: false
+      ZEPPELIN_admin_username: admin
+      ZEPPELIN_admin_password: abc123!
+      ZEPPELIN_user_username: zeppelin
+      ZEPPELIN_user_password: abc123!
+      
+      #jupyter
+      JUPYTER_enable: false
+      # one of 'minimal', 'r', 'scipy', 'tensorflow', 'datascience', 'all_spark'
+      JUPYTER_edition: 'minimal'
+      JUPYTER_volume_map_data: false
+
+      # Visualization
+      GRAFANA_enable: false
+      KIBANA_enable: false #needs to have elasticsearch enabled to work
+
+      # NoSQL
+      REDIS_enable: false
+      REDIS_replicasets: 0
+      REDIS_allow_empty_password: yes
+      REDIS_disable_commands:
+      REDIS_password: abc123!
+      REDIS_aof_enabled: no
+      REDIS_volume_map_data: false
+            
+      REDIS_INSIGHT_enable: false
+      
+      REDIS_COMMANDER_enable: false
+      
+      CASSANDRA_enable: false
+      CASSANDRA_major_version: 4
+      
+      REAPER_enable: false
+      DATASTAX_enable: false
+      DATASTAX_nodes: 3
+      MONGO_enable: false
+      SOLR_enable: false
+      ELASTICSEARCH_enable: false
+      DEJAVU_enable: false
+      CEREBRO_enable: false
+      ELASTICHQ_enable: false
+
+      NEO4J_enable: false
+      # either "community" or "enterprise"
+      NEO4J_edition: community
+      NEO4J_dbms_memory_pagecache_size: ''
+      NEO4J_dbms_memory_heap_max_size: ''
+      NEO4J_volume_map_data: false
+      NEO4J_volume_map_logs: false
+      NEO4J_extension_script: ''
+      NEO4J_plugins: ''
+      NEO4J_dbms_logs_debug_level: 'INFO'
+      
+      
+      # Influx DB 1.x
+      INFLUXDB_enable: false
+      INFLUXDB_volume_map_data: false
+      INFLUXDB_TELEGRAF_enable: false
+      INFLUXDB_CHRONOGRAF_enable: false
+      INFLUXDB_CHRONOGRAF_volume_map_data: false
+      INFLUXDB_KAPACITOR_enable: false
+      INFLUXDB_KAPACITOR_volume_map_data: false
+
+      # Influx DB 2.x
+      INFLUXDB2_enable: false
+      INFLUXDB2_volume_map_config: false
+      INFLUXDB2_volume_map_data: false
+      INFLUXDB2_username: influx
+      INFLUXDB2_password: abc123abc123!
+      INFLUXDB2_admin_token: 
+      INFLUXDB2_org: demo
+      INFLUXDB2_bucket: demo-bucket
+
+      # NoSQL - Prometeus
+      PROMETHEUS_enable: false
+      PROMETHEUS_volume_map_data: false
+      PROMETHEUS_PUSHGATEWAY_enable: false
+
+      # NoSQL - Tile38
+      TILE38_enable: false
+
+      # RDBMS
+      MYSQL_enable: false
+      SQLSERVER_enable: false
+
+      POSTGRESQL_enable: false
+      POSTGRESQL_volume_map_data: false
+      TIMESCALEDB_enable: false
+      TIMESCALEDB_volume_map_data: false
+
+      ADMINER_enable: false
+
+      # Event Store
+      AXON_enable: false
+
+      # ===== Presto ========
+      PRESTO_enable: false
+      # one of starburstdata, oss
+      PRESTO_edition: 'starburstdata'
+
+      # ===== Dremio ========
+      DREMIO_enable: false
+
+      # MQTT
+      MOSQUITTO_enable: false
+      MOSQUITTO_nodes: 1
+      MOSQUITTO_volume_map_data: false
+      HIVEMQ3_enable: false
+      HIVEMQ4_enable: false
+      MQTT_UI_enable: false
+
+      # ActiveMQ
+      ACTIVEMQ_enable: false
+
+      # MinIO Object Storage
+      MINIO_enable: false
+      MINIO_volume_map_data: false
+
+      AWSCLI_enable: false
+
+      # FTP
+      FTP_enable: false
+
+      # Container Mgmt
+      PORTAINER_enable: false
+      CADVISOR_enable: false
+
+      # ===== Wetty ========
+      WETTY_enable: true
+
+      # ===== Markdown Viewer ========
+      MARKDOWN_VIEWER_enable: true
+
+      # Python image
+      PYTHON_enable: false
+      PYTHON_script_folder: ''
+      PYTHON_script: ''
