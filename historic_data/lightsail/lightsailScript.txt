@@ -55,5 +55,5 @@ sudo echo "export DOCKER_HOST_IP=$DOCKER_HOST_IP" | sudo tee -a /etc/profile.d/p
 sudo echo "export DATAPLATFORM_HOME=$PWD" | sudo tee -a /etc/profile.d/platys-platform-env.sh
 
 # Startup Environment
-docker login -u jluetolf -p <password>
+docker login -u jluetolf -p <password-replace>
 docker-compose up -d
