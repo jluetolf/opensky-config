@@ -113,7 +113,7 @@
       NODERED_volume_map_data: false
 
       #zeppelin
-      ZEPPELIN_enable: true
+      ZEPPELIN_enable: false
       ZEPPELIN_volume_map_data: false
       ZEPPELIN_admin_username: admin
       ZEPPELIN_admin_password: abc123!
