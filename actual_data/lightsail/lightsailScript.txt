@@ -46,8 +46,9 @@ sudo sysctl -w vm.max_map_count=262144
 cd /home/${USERNAME} 
 git clone https://github.com/${GITHUB_OWNER}/${GITHUB_PROJECT}
 chown -R ${USERNAME}:${PASSWORD} ${GITHUB_PROJECT}
+chmod 777 -R  /home/${USERNAME}/${GITHUB_PROJECT}
 
-cd /home/${USERNAME}/${GITHUB_PROJECT}/historic_data/docker
+cd /home/${USERNAME}/${GITHUB_PROJECT}/actual_data/docker
 
 # Make Environment Variables persistent
 sudo echo "export PUBLIC_IP=$PUBLIC_IP" | sudo tee -a /etc/profile.d/platys-platform-env.sh
