@@ -503,7 +503,7 @@
       #
       # ===== Zeppelin ========
       #
-      ZEPPELIN_enable: true
+      ZEPPELIN_enable: false
       ZEPPELIN_volume_map_data: false
       ZEPPELIN_admin_username: admin
       ZEPPELIN_admin_password: changeme
@@ -720,10 +720,10 @@
       ELASTICSEARCH_enable: false
       # one of 'oss', 'elastic',
       ELASTICSEARCH_edition: 'oss'
-      DEJAVU_enable: true
+      DEJAVU_enable: false
       CEREBRO_enable: false
       ELASTICHQ_enable: false
-      ELASTICVUE_enable: true
+      ELASTICVUE_enable: false
       #
       # ===== OpenSearch ========
       #
@@ -1151,7 +1151,7 @@
       #
       # ===== Wetty ========
       #
-      WETTY_enable: true
+      WETTY_enable: false
       #
       # ===== Markdown Viewer ========
       #
