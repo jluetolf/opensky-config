@@ -100,7 +100,7 @@
       #
       # ===== Confluent ksqlDB ========
       #
-      KAFKA_KSQLDB_enable: false
+      KAFKA_KSQLDB_enable: true
       KAFKA_KSQLDB_edition: 'oss'
       KAFKA_KSQLDB_nodes: 1
       KAFKA_KSQLDB_internal_replication_factor: 1

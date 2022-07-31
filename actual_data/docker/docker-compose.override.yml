@@ -1,0 +1,18 @@
+version: "3.5"
+services:
+    opensky-polling-data:
+        image: "jluetolf/opensky-polling-data"
+        ports:
+            - 50000:50000
+    opensky-enrich-data:
+        image: "jluetolf/opensky-enrich-data"
+        ports:
+            - 50100:50100
+    opensky-store-cassandra:
+        image: "jluetolf/opensky-store-cassandra"
+        ports:
+            - 50200:50200
+    opensky-store-opensearch:
+        image: "jluetolf/opensky-store-opensearch"
+        ports:
+            - 50300:50300
