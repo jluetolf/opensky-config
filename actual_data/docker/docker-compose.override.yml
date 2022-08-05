@@ -14,9 +14,9 @@ services:
         image: "jluetolf/opensky-store-cassandra"
         ports:
             - 50200:50200
-	restart: unless-stopped
+        restart: unless-stopped
         depends_on:
-      	    - cassandra-1
+            - cassandra-1
 
     opensky-store-opensearch:
         image: "jluetolf/opensky-store-opensearch"
@@ -24,6 +24,6 @@ services:
             - 50300:50300
         restart: unless-stopped
         depends_on:
-      	    - opensearch-1
+            - opensearch-1
 
 
