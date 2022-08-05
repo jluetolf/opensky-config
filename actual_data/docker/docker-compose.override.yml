@@ -29,6 +29,7 @@ services:
         depends_on:
             - opensky-enrich-data
             - cassandra-1
+        restart: unless-stopped
 
     opensky-store-opensearch:
         image: "jluetolf/opensky-store-opensearch"
