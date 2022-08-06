@@ -6,10 +6,6 @@ services:
             - 50000:50000
         environment:
             PUBLIC_IP: ${PUBLIC_IP}
-        depends_on:
-            - kafka-1
-            - kafka-2
-            - kafka-3
 
     opensky-enrich-data:
         image: "jluetolf/opensky-enrich-data"
@@ -28,8 +24,6 @@ services:
             PUBLIC_IP: ${PUBLIC_IP}
         depends_on:
             - opensky-enrich-data
-            - cassandra-1
-        restart: unless-stopped
 
     opensky-store-opensearch:
         image: "jluetolf/opensky-store-opensearch"
@@ -39,7 +33,6 @@ services:
             PUBLIC_IP: ${PUBLIC_IP}
         depends_on:
             - opensky-enrich-data
-            - opensearch-1
            
     opensky-test-application:
         image: "jluetolf/opensky-test-application"
