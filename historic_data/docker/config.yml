@@ -69,7 +69,7 @@
       HADOOP_datanodes: 2
 
       #spark
-      SPARK_enable: false
+      SPARK_enable: true
       SPARK_base_version: 3.1
       SPARK_workers: 2
 
@@ -113,7 +113,7 @@
       NODERED_volume_map_data: false
 
       #zeppelin
-      ZEPPELIN_enable: false
+      ZEPPELIN_enable: true
       ZEPPELIN_volume_map_data: false
       ZEPPELIN_admin_username: admin
       ZEPPELIN_admin_password: abc123!

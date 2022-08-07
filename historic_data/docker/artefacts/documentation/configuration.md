@@ -30,7 +30,8 @@ There are some overall settings which will control the behaviour for all or a gr
 | `S3_enable`                             	| `false` | 1.9.0 | Use external S3 service, such as AWS S3 cloud service or an on-premises S3 appliance. You have to configure two environment variables, `PLATYS_AWS_ACCESS_KEY` with the access key and `PLATYS_AWS_SECRET_ACCESS_KEY` with the access secret. This can be done on the on the docker host or in the `.env` file in the platform home (same folder where the `docker-compose.yml` is located). |  
 | `S3_endpoint`                             	| `` | 1.9.0 | The endpoint address of the S3 external service |  
 | `S3_path_style_access`                             	| `false` | 1.9.0 | Use Path Style Access if set to `true`, otherwise the default of virtual hosted-style access is used. |
-
+| `ADLS_enable`                             	| `false` | 1.15.0 | Use external Azure Data Lake Storage Gen2 service. You have to configure two environment variables, `PLATYS_AZURE_ADLS_ACCESS_KEY` with the access key. This can be done on the on the docker host or in the `.env` file in the platform home (same folder where the `docker-compose.yml` is located). |  
+| `ADLS_storage_account`                             	| `` | 1.15.0 | The name of the storage account for the ADLS service. |  
 
 ## Platform Services
 
@@ -682,6 +683,10 @@ For each service there might be some other settings, such as controlling the num
 | `S3MANGER_enable`                                	| `false` 	| 1.11.0 	| Generate S3Manager service                                                                                                                                                             	|             	|                                	|
 | [**_AWS CLI_**](./services/awscli)   &nbsp;&nbsp;&nbsp;&nbsp;![x86-64](./images/x86-64.png)                        	|         	|
 | `AWSCLI_enable`                                	| `false` 	| 1.0.0 	| Generate AWSClI service                                                                                                                                                             	|             	|                                	|
+| [**_Azure CLI_**](./services/azurecli)   &nbsp;&nbsp;&nbsp;&nbsp;![x86-64](./images/x86-64.png)                        	|         	|
+| `AZURECLI_enable`                                	| `false` 	| 1.15.0 	| Generate Azure CLI service                                                                                                                                                             	|             	|                                	|
+| [**_Azure Storage Explorer_**](./services/azure-storage-explorer)   &nbsp;&nbsp;&nbsp;&nbsp;![x86-64](./images/x86-64.png)                        	|         	|
+| `AZURE_STORAGE_EXPLORER_enable`                                	| `false` 	| 1.15.0 	| Generate Azure Storage Explorer service                                                                                                                                                             	|             	|                                	|
 | [**_LakeFS_**](./services/lakefs)   &nbsp;&nbsp;&nbsp;&nbsp;![x86-64](./images/x86-64.png)                        	|         	|
 | `LAKEFS_enable`                                 	| `false` 	| 1.12.0 	| Generate LakeFS service                                                                                                                                                              	|    
 | `LAKEFS_blockstore_type`                                 	| `s3` 	| 1.13.0 	| Block adapter to use, one of [`local`, `s3`, `gs`, `azure`, `mem`]. This controls where the underlying data will be stored.                                                                                                                                                             	|     
@@ -846,3 +851,5 @@ For each service there might be some other settings, such as controlling the num
 | `CADVISOR_enable`                             	| `false` 	| 1.2.0 	| Generate CAdvisor Container UI service                                                                                                                                             	|
 | [**Watchtower**](./services/watchtower) &nbsp;&nbsp;&nbsp;&nbsp;![x86-64](./images/x86-64.png)  ![arm](./images/arm.png)                    	|         	|       	            	
 | `WATCHTOWER_enable` | `false` 	| 1.11.0 	| Generates the watchtower service, a container-based solution for automating Docker container base image updates. |
+| `WATCHTOWER_map_config_json` | `false` 	| 1.15.0 	| Map the `config.json` file from `$HOME/.docker/` folder into the `watchtower` container? |
+
