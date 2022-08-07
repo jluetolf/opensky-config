@@ -147,7 +147,7 @@ services:
     restart: unless-stopped
   #  ================================== ksqlDB ========================================== #
   ksqldb-server-1:
-    image: confluentinc/ksqldb-server:0.26.0
+    image: confluentinc/ksqldb-server:0.27.1
     hostname: ksqldb-server-1
     container_name: ksqldb-server-1
     labels:
@@ -201,7 +201,7 @@ services:
   # Access the cli by running:
   # > docker exec -it ksqldb-cli ksql http://ksqldb-server-1:8088
   ksqldb-cli:
-    image: confluentinc/ksqldb-cli:0.26.0
+    image: confluentinc/ksqldb-cli:0.27.1
     container_name: ksqldb-cli
     hostname: ksqldb-cli
     labels:
@@ -405,6 +405,25 @@ services:
     environment:
       - OPENSEARCH_HOSTS=["http://opensearch-1:9200"]
       - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true     # disables security dashboards plugin in OpenSearch Dashboards
+    volumes:
+      - ./data-transfer:/data-transfer
+    restart: unless-stopped
+  #  ================================== Wetty ========================================== #
+  wetty:
+    image: svenihoney/wetty:latest
+    container_name: wetty
+    hostname: wetty
+    labels:
+      com.platys.name: wetty
+      com.platys.webui.title: WeTTY UI
+      com.platys.webui.url: http://${PUBLIC_IP}:3001
+    ports:
+      - 3001:3000
+    environment:
+      - REMOTE_SSH_SERVER=${DOCKER_HOST_IP}
+      - REMOTE_SSH_PORT=22
+      - REMOTE_SSH_USER=
+      - WETTY_PORT=3000
     volumes:
       - ./data-transfer:/data-transfer
     restart: unless-stopped
