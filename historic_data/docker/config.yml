@@ -121,7 +121,7 @@
       ZEPPELIN_user_password: abc123!
       
       #jupyter
-      JUPYTER_enable: false
+      JUPYTER_enable: true
       # one of 'minimal', 'r', 'scipy', 'tensorflow', 'datascience', 'all_spark'
       JUPYTER_edition: 'minimal'
       JUPYTER_volume_map_data: false
