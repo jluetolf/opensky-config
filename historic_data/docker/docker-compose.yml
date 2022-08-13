@@ -41,7 +41,7 @@ services:
       INIT_DAEMON_STEP: setup_spark
       MASTER: spark://spark-master:7077
       SPARK_DEFAULTS_CONF_spark_jars_repositories:
-      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_packages: org.apache.spark:spark-avro_2.12:3.1.3
       SPARK_DEFAULTS_CONF_spark_jars_excludes:
       SPARK_DEFAULTS_CONF_spark_jars:
       SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
@@ -84,7 +84,7 @@ services:
       SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
       SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
       SPARK_DEFAULTS_CONF_spark_jars_repositories:
-      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_packages: org.apache.spark:spark-avro_2.12:3.1.3
       SPARK_DEFAULTS_CONF_spark_jars_excludes:
       SPARK_DEFAULTS_CONF_spark_jars:
       SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
@@ -127,7 +127,7 @@ services:
       SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_endpoint: s3.amazonaws.com
       SPARK_DEFAULTS_CONF_spark_hadoop_fs_s3a_path_style_access: 'False'
       SPARK_DEFAULTS_CONF_spark_jars_repositories:
-      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_packages: org.apache.spark:spark-avro_2.12:3.1.3
       SPARK_DEFAULTS_CONF_spark_jars_excludes:
       SPARK_DEFAULTS_CONF_spark_jars:
       SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
@@ -177,7 +177,7 @@ services:
       AWS_ENDPOINT: s3.amazonaws.com
       AWS_DEFAULT_REGION: eu-central-1
       SPARK_DEFAULTS_CONF_spark_jars_repositories:
-      SPARK_DEFAULTS_CONF_spark_jars_packages:
+      SPARK_DEFAULTS_CONF_spark_jars_packages: org.apache.spark:spark-avro_2.12:3.1.3
       SPARK_DEFAULTS_CONF_spark_jars_excludes:
       SPARK_DEFAULTS_CONF_spark_jars:
       SPARK_DEFAULTS_CONF_spark_jars_ivySettings:
@@ -246,25 +246,6 @@ services:
       - ./plugins/jupyter/aws-java-sdk-bundle-1.11.375.jar:/usr/local/spark/jars/aws-java-sdk-bundle-1.11.375.jar
       - ./plugins/jupyter/hadoop-aws-3.2.1.jar:/usr/local/spark/jars/hadoop-aws-3.2.1.jar
       - ./plugins/jupyter/guava-27.1-jre.jar:/usr/local/spark/jars/guava-14.0.1.jar
-    restart: unless-stopped
-  #  ================================== OpenSearch Dashboards ========================================== #
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2
-    hostname: opensearch-dashboards
-    container_name: opensearch-dashboards
-    labels:
-      com.platys.name: opensearch-dashboards
-      com.platys.webui.title: OpenSearch Dashboards
-      com.platys.webui.url: http://${PUBLIC_IP}:5603
-    ports:
-      - 5603:5601
-    expose:
-      - '5601'
-    environment:
-      - OPENSEARCH_HOSTS=["http://opensearch-1:9200"]
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true     # disables security dashboards plugin in OpenSearch Dashboards
-    volumes:
-      - ./data-transfer:/data-transfer
     restart: unless-stopped
   #  ================================== markdown-viewer ========================================== #
   markdown-viewer:

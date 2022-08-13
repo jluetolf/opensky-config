@@ -101,6 +101,8 @@ Container Port(s) | Internal Port(s)           | Service (alternatives) |
 7199 | 7199 | cassandra-1 |
 7200 | 7199 | cassandra-2 |
 7201 | 7199 | cassandra-3 |
+7202 | 7199 | cassandra-4 |
+7203 | 7199 | cassandra-5 |
 7474 | 7474 | neo4j-1 |
 7475 | 7474 | neo4j-2 |
 7476 | 7474 | neo4j-3 |
@@ -155,6 +157,8 @@ Container Port(s) | Internal Port(s)           | Service (alternatives) |
 9160 | 9160 | cassandra-1 |
 9161 | 9160 | cassandra-2 |
 9162 | 9160 | cassandra-3 |
+9163 | 9160 | cassandra-4 |
+9164 | 9160 | cassandra-5 |
 9083 | 9083 | hive-metastore |
 9021 | 9021 | control-center (dc1) |
 9022 | 9021 | control-center (dc2) |
@@ -258,8 +262,10 @@ Container Port(s) | Internal Port(s)           | Service (alternatives) |
 28085 | 8080 | azkarra-worker-1 |
 28888 | 8888 | jupyter |
 29042 | 9042 | cassandra-1 |
-29043 | 9042 | cassandra-1 |
-29044 | 9042 | cassandra-1 |
+29043 | 9042 | cassandra-2 |
+29044 | 9042 | cassandra-3 |
+29045 | 9042 | cassandra-4 |
+29046 | 9042 | cassandra-5 |
 29092 | 29092 | kafka-1 (docker-host)   |
 29093 | 29093 | kafka-2 (docker-host    |
 29094 | 29094 | kafka-3 (docker-host)   |
