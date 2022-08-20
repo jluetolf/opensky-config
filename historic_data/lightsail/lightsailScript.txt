@@ -5,8 +5,8 @@ export PLATYS_VERSION=2.4.0
 export NETWORK_NAME=eth0
 export USERNAME=ubuntu
 export PASSWORD=ubuntu
-export PLATYS_AWS_ACCESS_KEY=AKIAW3Z47PL2F4ZJV5UX
-export PLATYS_AWS_SECRET_ACCESS_KEY=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
+export PLATYS_AWS_ACCESS_KEY=<access-key>
+export PLATYS_AWS_SECRET_ACCESS_KEY=<secret>
 
 # Prepare Environment Variables 
 export PUBLIC_IP=$(curl ipinfo.io/ip)
